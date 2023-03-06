@@ -4,41 +4,32 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server{
     public static void main(String[] args) throws SocketException {
-        try (ServerSocket serverSocket = new ServerSocket(1234)) { // связь между сервером и клиентом
+        try (ServerSocket serverSocket = new ServerSocket(1234)) {
             System.out.println("Сервер запущен, ожидаем подключение...");
-            Socket socket = serverSocket.accept(); // Установление соединения
+            Socket socket = serverSocket.accept();
             System.out.println("Клиент подключился");
             DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream()); 
-            // Поток, отправленный клиенту
             DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-            // Поток, полученный от клиента 
             while(true) {
-                String clientRequest = dataInputStream.readUTF(); // возвращает строку от клиента
+                String clientRequest = dataInputStream.readUTF();
                 if (clientRequest.equals("end")) break;
-                // String[] value = clientRequest.split(" ");
-                // for (int i = 0; i < value.length; i = i + 2) {
-                //     String[] string = value[i].split("");
-                //     String find = "qwertyuiop[]asdfghjkl;'zxcvbnm/йцукенгшщзхъфывапролджэячсмитьбю!\"№%:?()ё~`@#$^&{}><";
-                //     for (int j = 0; j < string.length; j++) {
-                //         if (find.contains(string[j])){
-                //             string[j] = "";                            
-                //         }
-                //     }
-                // }
-                String[] str = clientRequest.split(" ");
-                double a = Double.parseDouble(str[0]);
-                String sign = str[1];
-                double b = Double.parseDouble(str[2]);
+                StringBuilder requestSort = getNumber(clientRequest);
+                String temp = String.format("%s", requestSort);
+                String[] resultC = temp.split(" ");
+                double a = Double.parseDouble(resultC[0]);
+                String sign = resultC[1];
+                double b = Double.parseDouble(resultC[2]);
                 double result;
                 switch (sign) {
                     case "+":
                         result = a + b;
                         if (result % 1 > 0) {
                             dataOutputStream.writeUTF(String.format("Сумма чисел равна: %.2f", result));
-                            // отправили клиенту
                             break;
                         } else {
                             dataOutputStream.writeUTF(String.format("Сумма чисел равна: %.0f", result));
@@ -77,5 +68,38 @@ public class Server{
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    static StringBuilder getNumber (String client) {
+        String finds = "qwertyuiop[]asdfghjkl;'zxcvbnm/йцукенгшщзхъфывапрол=джэячсмитьбю!\"№%:?()ё~`@#$^&{}><";
+        String[] getString = client.split(" ");
+        List<String> list = new ArrayList<>();
+        for (String item : getString) {
+            list.add(item);
+        }
+        List<String> newList = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            String[] find = list.get(i).split("");
+            for (String s : find) {
+                newList.add(s);
+            }
+            for (int nl = 0; nl < newList.size(); nl++) {
+                if (finds.contains(newList.get(nl))) {
+                    newList.remove(nl);
+                    nl = 0;
+                }
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int nl = 0; nl < newList.size(); nl++) {
+            if (newList.get(nl).equals("+") || newList.get(nl).equals("-")
+            || newList.get(nl).equals("/") || newList.get(nl).equals("*")){
+                sb.append(" ");
+                sb.append(newList.get(nl));
+                sb.append(" ");
+            } else {
+                sb.append(newList.get(nl));
+            }
+        }
+        return sb;
     }
 }
